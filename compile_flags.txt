@@ -1,0 +1,4 @@
+-lsodium
+-lsecp256k1
+-I/host/usr/local/include
+-L/host/usr/local/lib

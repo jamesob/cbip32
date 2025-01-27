@@ -5,4 +5,4 @@ test:
 
 .PHONY: fuzz
 fuzz:
-	uv rn test_fuzz_cross_impl.py
+	uv run test_fuzz_cross_impl.py

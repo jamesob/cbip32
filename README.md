@@ -6,6 +6,8 @@ A fast, secure, low-dependency implementation of BIP32
   [`libsodium`](https://github.com/jedisct1/libsodium)
 - Zero heap allocations to allow end users to manage memory securely
 - Implemented in pure C for ease of FFI
+- Extensively tested
+  - Uses cross-implementation fuzz testing against `python-bip32`
 
 
 ## Installation from source

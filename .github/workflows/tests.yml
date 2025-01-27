@@ -1,22 +1,28 @@
 name: Run tests
-
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
-
+    branches: [master]
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     
     steps:
     - uses: actions/checkout@v4
-
     - name: Install system dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y libsecp256k1-dev libsodium-dev python3 golang
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt-get update
+          sudo apt-get install -y libsecp256k1-dev libsodium-dev python3 golang
+
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          brew install secp256k1 libsodium python3 go
+
+        fi
         curl -LsSf https://astral.sh/uv/install.sh | sh
         echo "$HOME/.uv/bin" >> $GITHUB_PATH
 
@@ -27,8 +33,7 @@ jobs:
     - name: Run Python tests
       run: |
         cd examples/py
-        make test
-        make fuzz
+        make test fuzz
 
     - name: Run Go tests
       run: |

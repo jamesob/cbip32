@@ -1,7 +1,7 @@
 package cbip32
 
 // #cgo CFLAGS: -I.
-// #cgo LDFLAGS: -L. -lbip32
+// #cgo LDFLAGS: -lbip32
 // #include "bip32.h"
 import "C"
 import (

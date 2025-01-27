@@ -1,6 +1,40 @@
 CC := $(shell command -v clang 2>/dev/null || command -v $(CC) 2>/dev/null || echo cc)
-CFLAGS = -DDEBUG -Wall -Werror
-LDFLAGS = -lsecp256k1 -lsodium
+
+CFLAGS = -Wall -Werror
+ifdef DEBUG
+    CFLAGS += -g -DDEBUG
+else
+    CFLAGS += -O2
+endif
+
+LDCONFIG := ldconfig
+INSTALL_PREFIX := /usr/local
+
+UNAME_S := $(shell uname -s)
+
+# Set default paths
+STD_INCLUDE_PATHS := /usr/local/include
+STD_LIB_PATHS := /usr/local/lib
+
+# Add Homebrew paths for macOS
+ifeq ($(UNAME_S),Darwin)
+    UNAME_MACHINE := $(shell uname -m)
+	LDCONFIG := test 1
+    ifeq ($(UNAME_MACHINE),arm64)
+        BREW_PREFIX := /opt/homebrew
+    else
+        BREW_PREFIX := /usr/local
+    endif
+    INCLUDE_PATHS := $(BREW_PREFIX)/include $(STD_INCLUDE_PATHS)
+    LIB_PATHS := $(BREW_PREFIX)/lib $(STD_LIB_PATHS)
+else
+    INCLUDE_PATHS := $(STD_INCLUDE_PATHS)
+    LIB_PATHS := $(STD_LIB_PATHS)
+endif
+
+# Convert paths to compiler flags
+CFLAGS += $(foreach path,$(INCLUDE_PATHS),-I$(path))
+LDFLAGS += $(foreach path,$(LIB_PATHS),-L$(path)) -lsecp256k1 -lsodium
 
 all: libbip32.so
 	$(CC) $(CFLAGS) -o bip32-cli cli.c libbip32.so $(LDFLAGS)
@@ -22,9 +56,9 @@ fuzz: fuzz_target
 
 .PHONY: install
 install: libbip32.so
-	install -m755 libbip32.so /usr/local/lib/
-	install -m755 bip32.h /usr/local/include/
-	ldconfig
+	install -m755 libbip32.so $(INSTALL_PREFIX)/lib/
+	install -m755 bip32.h $(INSTALL_PREFIX)/include/
+	$(LDCONFIG)
 
 .PHONY: clean
 clean:

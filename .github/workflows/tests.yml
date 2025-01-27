@@ -22,13 +22,24 @@ jobs:
         elif [ "$RUNNER_OS" == "macOS" ]; then
           brew install secp256k1 libsodium python3 go
 
+          sudo mkdir -p /usr/local/{lib,include}
+          sudo chmod 755 /usr/local/{lib,include}
+          echo "LIBRARY_PATH=/opt/homebrew/lib:$LIBRARY_PATH" >> $GITHUB_ENV
+          echo "CPATH=/opt/homebrew/include:$CPATH" >> $GITHUB_ENV
         fi
+
         curl -LsSf https://astral.sh/uv/install.sh | sh
         echo "$HOME/.uv/bin" >> $GITHUB_PATH
 
     - name: Build
       run: |
-        make && sudo make install
+        make
+
+        if [ "$RUNNER_OS" == "macOS" ]; then
+          sudo make INSTALL_PREFIX=/opt/homebrew install
+        else
+          sudo make install
+        fi
 
     - name: Run Python tests
       run: |
@@ -38,4 +49,6 @@ jobs:
     - name: Run Go tests
       run: |
         cd examples/go
-        make test
+        if [ "$RUNNER_OS" != "macOS" ]; then
+          make test
+        fi

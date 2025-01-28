@@ -13,7 +13,7 @@ INSTALL_PREFIX := /usr/local
 UNAME_S := $(shell uname -s)
 
 # Set default paths
-STD_INCLUDE_PATHS := /usr/local/include
+STD_INCLUDE_PATHS := /usr/local/include .
 STD_LIB_PATHS := /usr/local/lib
 
 # Add Homebrew paths for macOS
@@ -40,7 +40,7 @@ all: libbip32.so
 	$(CC) $(CFLAGS) -o bip32-cli examples/cli.c libbip32.so $(LDFLAGS)
 
 libbip32.so:
-	$(CC) $(CFLAGS) -I. -shared -fPIC bip32.c $(LDFLAGS) -o libbip32.so
+	$(CC) $(CFLAGS) -shared -fPIC bip32.c $(LDFLAGS) -o libbip32.so
 
 fuzz_target: libbip32.so
 	$(CC) -fsanitize=fuzzer,address fuzz.c libbip32.so $(LDFLAGS) -o fuzz_target

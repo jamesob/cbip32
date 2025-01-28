@@ -93,7 +93,9 @@ int bip32_fingerprint(const bip32_key* key, uint32_t* out) {
     unsigned char pubkey_bytes[BIP32_PUBKEY_SIZE];
 
     if (key->is_private) {
-        bip32_pubkey_from_privkey(pubkey_bytes, key->key.privkey);
+        if (!bip32_pubkey_from_privkey(pubkey_bytes, key->key.privkey)) {
+            return 0;
+        }
     } else {
         memcpy(pubkey_bytes, key->key.pubkey, BIP32_PUBKEY_SIZE);
     }

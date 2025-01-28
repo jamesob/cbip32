@@ -48,12 +48,28 @@ int bip32_from_seed(bip32_key *key, const unsigned char *seed, size_t seed_len);
  */
 int bip32_derive(bip32_key *target, const char* source, const char* path);
 
+/** Serialize a BIP32 key to its base58 string representation.
+ *
+ * Returns 1 if successful.
+ */
 int bip32_serialize(const bip32_key *key, char *str, size_t str_len);
 
+/** Deserialize a BIP32 key from its base58 string representation.
+ *
+ * Returns 1 if successful.
+ */
 int bip32_deserialize(bip32_key *key, const char *str, size_t str_len);
 
+/** Get a private BIP32 key's public key.
+ *
+ * Returns 1 if successful.
+ */
 int bip32_get_public(bip32_key *target, const bip32_key *source);
 
+/** Get the `index` child of a given BIP32 key.
+ *
+ * Returns 1 if successful.
+ */
 int bip32_index_derive(bip32_key *target, const bip32_key *source, uint32_t index);
 
 /** Given a private key, set `out`'s bytes to the corresponding compressed pubkey.
@@ -64,7 +80,7 @@ int bip32_pubkey_from_privkey(unsigned char* out, const unsigned char* privkey_i
 
 /** Get a key's fingerpint.
  *
- * Returns 1 always.
+ * Returns 1 if successful.
  */
 int bip32_fingerprint(const bip32_key* key, uint32_t* out);
 

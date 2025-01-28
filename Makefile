@@ -37,7 +37,7 @@ CFLAGS += $(foreach path,$(INCLUDE_PATHS),-I$(path))
 LDFLAGS += $(foreach path,$(LIB_PATHS),-L$(path)) -lsecp256k1 -lsodium
 
 all: libbip32.so
-	$(CC) $(CFLAGS) -o bip32-cli cli.c libbip32.so $(LDFLAGS)
+	$(CC) $(CFLAGS) -o bip32-cli examples/cli.c libbip32.so $(LDFLAGS)
 
 libbip32.so:
 	$(CC) $(CFLAGS) -I. -shared -fPIC bip32.c $(LDFLAGS) -o libbip32.so
@@ -47,8 +47,8 @@ fuzz_target: libbip32.so
 
 .PHONY: test
 test: libbip32.so
-	$(CC) $(CFLAGS) -o test test.c libbip32.so $(LDFLAGS)
-	./test
+	$(CC) $(CFLAGS) -o test-bip32 test/test.c libbip32.so $(LDFLAGS)
+	./test-bip32
 
 .PHONY: fuzz
 fuzz: fuzz_target
@@ -62,4 +62,4 @@ install: libbip32.so
 
 .PHONY: clean
 clean:
-	rm -f *.o *.so test
+	rm -f *.o *.so test-bip32

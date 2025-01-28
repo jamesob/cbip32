@@ -95,7 +95,18 @@ void test_vector_1(void) {
 }
 
 int main() {
-    
+    bip32_key k;
+
+    if (bip32_derive(&k, "xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ", "m") != 1) {
+        printf("failed to derive xpub\n");
+        return 1;
+    }
+    // Shouldn't work given an attempted hardened derivation with xpub.
+    if (bip32_derive(&k, "xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ", "m/1h") != 0) {
+        printf("failed to refuse to derive hardened path from xpub\n");
+        return 1;
+    }
+
 #if defined(__ARM_FEATURE_SHA2)
     printf("HAS SHA\n");
 #endif

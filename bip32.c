@@ -271,7 +271,9 @@ int bip32_derive(bip32_key *target, const char* source, const char* path) {
 
         bip32_key tmp;
         memcpy(&tmp, &basekey, sizeof(bip32_key));
-        bip32_index_derive(&basekey, &tmp, index);
+        if (bip32_index_derive(&basekey, &tmp, index) != 1) {
+            return 0;
+        }
         p = strchr(end, '/');
     }
     
@@ -324,11 +326,13 @@ int bip32_serialize(const bip32_key *key, char *str, size_t str_len) {
     return b58enc(str, &str_len, data, SER_PLUS_CHECKSUM_SIZE);
 }
 
-int bip32_deserialize(bip32_key *key, const char *str, const size_t str_len) {
-    unsigned char data[82];
-    size_t data_len = sizeof(data);
+#define BIP32_BASE58_BYTES_LEN 82
 
-    if (!b58tobin(data, &data_len, str, str_len) || data_len != 82) {
+int bip32_deserialize(bip32_key *key, const char *str, const size_t str_len) {
+    unsigned char data[BIP32_BASE58_BYTES_LEN];
+    size_t data_len = BIP32_BASE58_BYTES_LEN;
+
+    if (!b58tobin(data, &data_len, str, str_len) || data_len != BIP32_BASE58_BYTES_LEN) {
         return 0;
     }
 

@@ -68,7 +68,7 @@ exit:
     return retcode;
 }
 
-int pubkey_from_privkey(unsigned char* out, const unsigned char* privkey_in) {
+int bip32_pubkey_from_privkey(unsigned char* out, const unsigned char* privkey_in) {
     int retcode = 1;
     secp256k1_context* ctx = NULL;
     get_secp_ctx(&ctx);
@@ -89,11 +89,11 @@ exit:
     return retcode;
 }
 
-int get_fingerprint(const bip32_key* key, uint32_t* out) {
+int bip32_fingerprint(const bip32_key* key, uint32_t* out) {
     unsigned char pubkey_bytes[BIP32_PUBKEY_SIZE];
 
     if (key->is_private) {
-        pubkey_from_privkey(pubkey_bytes, key->key.privkey);
+        bip32_pubkey_from_privkey(pubkey_bytes, key->key.privkey);
     } else {
         memcpy(pubkey_bytes, key->key.pubkey, BIP32_PUBKEY_SIZE);
     }
@@ -114,7 +114,7 @@ int bip32_index_derive(bip32_key *target, const bip32_key *source, uint32_t inde
     int retcode = 1;
     const size_t hmac_msg_len = BIP32_PUBKEY_SIZE + sizeof(uint32_t);
     unsigned char hmac_msg[hmac_msg_len];
-    unsigned char output[SHA512_SIZE];
+    unsigned char output[crypto_hash_sha512_BYTES];
     bool is_hardened = index >= HARDENED_INDEX;
 
     if (is_hardened && !source->is_private) {
@@ -211,7 +211,7 @@ int bip32_index_derive(bip32_key *target, const bip32_key *source, uint32_t inde
         retcode = 0; goto exit;
     }
 
-    get_fingerprint(source, &target->parent_fingerprint);
+    bip32_fingerprint(source, &target->parent_fingerprint);
 
 exit:
     secp256k1_context_destroy(ctx);
@@ -337,7 +337,7 @@ int bip32_deserialize(bip32_key *key, const char *str, const size_t str_len) {
     }
 
     // Verify checksum
-    unsigned char hash[SHA256_SIZE];
+    unsigned char hash[crypto_hash_sha512_BYTES];
     sha256_double(hash, data, 78);
     if (memcmp(hash, data + 78, 4) != 0) {
         return 0;
@@ -421,7 +421,7 @@ int bip32_get_public(bip32_key *target, const bip32_key *source) {
     target->is_testnet = source->is_testnet;
     target->is_private = 0;
 
-    pubkey_from_privkey(target->key.pubkey, source->key.privkey);
+    bip32_pubkey_from_privkey(target->key.pubkey, source->key.privkey);
     return 1;
 }
 

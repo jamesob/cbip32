@@ -7,15 +7,11 @@
 #define BIP32_CHAINCODE_SIZE 32
 #define BIP32_PRIVKEY_SIZE 32
 #define BIP32_PUBKEY_SIZE 33
-#define RIPEMD160_SIZE 20
-#define SHA256_SIZE 32
-#define SHA512_SIZE 64
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// Version bytes
 #define VERSION_XPUB 0x0488B21E
 #define VERSION_XPRIV 0x0488ADE4
 #define VERSION_TPUB 0x043587CF
@@ -60,12 +56,17 @@ int bip32_get_public(bip32_key *target, const bip32_key *source);
 
 int bip32_index_derive(bip32_key *target, const bip32_key *source, uint32_t index);
 
-/**
- * Given a private key, set `out`'s bytes to the corresponding compressed pubkey.
+/** Given a private key, set `out`'s bytes to the corresponding compressed pubkey.
  *
  * Returns 1 if successful.
  */
-int pubkey_from_privkey(unsigned char* out, const unsigned char* privkey_in);
+int bip32_pubkey_from_privkey(unsigned char* out, const unsigned char* privkey_in);
+
+/** Get a key's fingerpint.
+ *
+ * Returns 1 always.
+ */
+int bip32_fingerprint(const bip32_key* key, uint32_t* out);
 
 void sha256_double(uint8_t *hash, const uint8_t *data, size_t len);
 

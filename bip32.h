@@ -68,9 +68,9 @@ int bip32_pubkey_from_privkey(unsigned char* out, const unsigned char* privkey_i
  */
 int bip32_fingerprint(const bip32_key* key, uint32_t* out);
 
-void sha256_double(uint8_t *hash, const uint8_t *data, size_t len);
+void bip32_sha256_double(uint8_t *hash, const uint8_t *data, size_t len);
 
-void hmac_sha512(
+void bip32_hmac_sha512(
     unsigned char* hmac_out,
     const unsigned char* key,
     size_t key_len,

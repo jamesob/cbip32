@@ -49,7 +49,7 @@ int bip32_from_seed(bip32_key *key, const unsigned char *seed, size_t seed_len) 
     unsigned char output[crypto_auth_hmacsha512_BYTES];
     const unsigned char bitcoin_seed[] = "Bitcoin seed";
 
-    hmac_sha512(output, bitcoin_seed, strlen((char*)bitcoin_seed), seed, seed_len);
+    bip32_hmac_sha512(output, bitcoin_seed, strlen((char*)bitcoin_seed), seed, seed_len);
 
     secp256k1_context* ctx = NULL;
     get_secp_ctx(&ctx);
@@ -158,7 +158,7 @@ int bip32_index_derive(bip32_key *target, const bip32_key *source, uint32_t inde
     uint32_t bigindex = to_big_endian(index);
     memcpy(hmac_msg + BIP32_PUBKEY_SIZE, &bigindex, sizeof(uint32_t));
 
-    hmac_sha512(output, source->chain_code, BIP32_CHAINCODE_SIZE, hmac_msg, hmac_msg_len);
+    bip32_hmac_sha512(output, source->chain_code, BIP32_CHAINCODE_SIZE, hmac_msg, hmac_msg_len);
 
     memcpy(target->chain_code, output + BIP32_PRIVKEY_SIZE, BIP32_CHAINCODE_SIZE);
 
@@ -320,7 +320,7 @@ int bip32_serialize(const bip32_key *key, char *str, size_t str_len) {
     
     // Add checksum and base58 encode
     uint8_t hash[32];
-    sha256_double(hash, data, 78);
+    bip32_sha256_double(hash, data, 78);
     memcpy(data + SER_SIZE, hash, 4);
 
     return b58enc(str, &str_len, data, SER_PLUS_CHECKSUM_SIZE);
@@ -338,7 +338,7 @@ int bip32_deserialize(bip32_key *key, const char *str, const size_t str_len) {
 
     // Verify checksum
     unsigned char hash[crypto_hash_sha512_BYTES];
-    sha256_double(hash, data, 78);
+    bip32_sha256_double(hash, data, 78);
     if (memcmp(hash, data + 78, 4) != 0) {
         return 0;
     }
@@ -425,14 +425,14 @@ int bip32_get_public(bip32_key *target, const bip32_key *source) {
     return 1;
 }
 
-void sha256_double(uint8_t *hash, const uint8_t *data, size_t len) {
+void bip32_sha256_double(uint8_t *hash, const uint8_t *data, size_t len) {
     assert(sodium_init() >= 0);
     unsigned char inthash[crypto_hash_sha256_BYTES];
     sha256(inthash, data, len);
     sha256(hash, inthash, crypto_hash_sha256_BYTES);
 }
 
-void hmac_sha512(
+void bip32_hmac_sha512(
     unsigned char* hmac_out, 
     const unsigned char* key, 
     size_t key_len, 

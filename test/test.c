@@ -97,7 +97,7 @@ void test_vector_1(void) {
 int main() {
     bip32_key k;
 
-    if (bip32_derive(&k, "xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ", "m") != 1) {
+    if (bip32_derive(&k, "xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ", "m/1/2") != 1) {
         printf("failed to derive xpub\n");
         return 1;
     }

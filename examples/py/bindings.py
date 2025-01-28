@@ -10,10 +10,8 @@ from ctypes import (
 
 @lru_cache
 def get_bip32_module():
-    if False and Path('../../bip32.c').exists():
-        # Compile the library
+    if os.environ.get('BIP32_DEV') and Path('../../bip32.c').exists():
         os.system('cd ../../ && make libbip32.so')
-        # Load the library
         bip32_lib = ctypes.CDLL('../../libbip32.so')
     else:
         bip32_lib = ctypes.CDLL('libbip32.so')

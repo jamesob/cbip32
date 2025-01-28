@@ -37,7 +37,14 @@ def their_derive(seed_hex_str: str, bip32_path: str) -> str:
     try:
         return bip32.get_xpriv_from_path(bip32_path)
     except Exception:
-        log.exception("bip32 failed to generate")
+        return INVALID_KEY
+
+
+def their_xpub_derive(base58: str, bip32_path: str) -> str:
+    bip32 = BIP32.from_xpub(base58)
+    try:
+        return bip32.get_xpub_from_path(bip32_path)
+    except Exception:
         return INVALID_KEY
 
 
@@ -46,7 +53,6 @@ def our_derive(hex_str, path) -> str:
         b32 = derive(hex_str, path)
         return b32.serialize()
     except Exception:
-        log.exception("our lib failed to generate")
         return INVALID_KEY
 
 
@@ -68,6 +74,18 @@ def test_impls(seed_hex_str, bip32_path):
         ours = our_derive(seed_hex_str, bip32_path)
     with timer('python-bip32'):
         theirs = their_derive(seed_hex_str, bip32_path)
+    assert ours == theirs
+
+
+@given(bip32_path=bip32_paths())
+@settings(max_examples=200)
+def test_xpub_impls(bip32_path):
+    xpub = 'xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ'
+
+    with timer('ours'):
+        ours = our_derive(xpub, bip32_path)
+    with timer('python-bip32'):
+        theirs = their_xpub_derive(xpub, bip32_path)
     assert ours == theirs
 
 

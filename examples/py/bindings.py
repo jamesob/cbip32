@@ -93,6 +93,15 @@ class BIP32:
 
 
 def derive(source: str, path: str = 'm') -> BIP32:
+    """
+    Get a BIP32 derivation.
+
+    Args:
+        source: Can either be the secret key hex or a serialized base58 BIP32 string
+          (xpub/xprv)
+        path: The path to derive, e.g. m/12/2'
+
+    """
     b = BIP32()
     if not get_bip32_module().bip32_derive(b.key, source.encode(), path.encode()):
         raise ValueError("failed")

@@ -1,5 +1,7 @@
 # cbip32
 
+![test workflow](https://github.com/jamesob/cbip32/actions/workflows/tests.yml/badge.svg)
+
 A fast, secure, low-dependency implementation of BIP32
 
 - Depends only on [`libsecp256k1`](https://github.com/bitcoin-core/libsecp256k1) and
@@ -36,7 +38,7 @@ git clone https://github.com/jamesob/cbip32.git && \
 
 The Python bindings for this implementation have been shown to be
 - *~2x* faster than `python-bip32`, an implementation based on `coincurve` which itself
-  wraps libsecp256k1, and
+  wraps libsecp256k1
 - *>100x* faster than `verystable`, which is a "dumb" pure Python implementation.
 
 From fuzzing:

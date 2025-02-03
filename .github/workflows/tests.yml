@@ -41,6 +41,10 @@ jobs:
           sudo make install
         fi
 
+    - name: Run C tests
+      run: |
+        make test
+
     - name: Run Python tests
       run: |
         cd examples/py

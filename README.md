@@ -3,7 +3,8 @@
 A fast, secure, low-dependency implementation of BIP32
 
 - Depends only on [`libsecp256k1`](https://github.com/bitcoin-core/libsecp256k1) and
-  [`libsodium`](https://github.com/jedisct1/libsodium)
+  [`libsodium`](https://github.com/jedisct1/libsodium) (for SHA256, HMAC-SHA512, and
+  context randomization)
 - No heap allocations (aside from secp context), which allows end users to manage memory securely
 - Implemented in pure C for ease of FFI
 - Extensively tested
@@ -31,9 +32,28 @@ git clone https://github.com/jamesob/cbip32.git && \
   make && sudo make install
 ```
 
+## Performance
+
+The Python bindings for this implementation have been shown to be
+- *~2x* faster than `python-bip32`, an implementation based on `coincurve` which itself
+  wraps libsecp256k1, and
+- *>100x* faster than `verystable`, which is a "dumb" pure Python implementation.
+
+From fuzzing:
+```
+  - Highest target scores [time per derivation]:
+     0.0162932  (label='ours')
+     0.0379755  (label='python-bip32')
+
+  - Highest target scores [time per derivation]:
+     0.00222896  (label='ours')
+     0.315636    (label='verystable')
+```
+
+
 ## Example bindings included
 
-### [Python](./examples/py)
+### Python [(`./examples/py`)](./examples/py)
 
 ```python
 >>> from bindings import derive
@@ -41,7 +61,7 @@ git clone https://github.com/jamesob/cbip32.git && \
 'xpub69s9RVsS4kfK2VFed2giqFm9gQ4VmCWuWcPHFJ51Rj6dHvBjCicCZm2HR88Z6J5zRYyHkt7W9LPygBc57RCCPp2t1AxCNa1VtvSq4qWYLqK'
 ```
 
-### [Go](./examples/go)
+### Go [(`./examples/go`)](./examples/go)
 
 ```go
 package cbip32

@@ -26,6 +26,12 @@ void test_vector_1(void) {
     bip32_key k;
     bip32_derive(&k, "000102030405060708090a0b0c0d0e0f\000", "m/1'");
 
+    // Should fail given the invalid "-1" path component.
+    assert(!bip32_derive(&k, "000102030405060708090a0b0c0d0e0f\000", "m/-1"));
+
+    // Should fail given the too-big path component.
+    assert(!bip32_derive(&k, "000102030405060708090a0b0c0d0e0f\000", "m/2147483648"));
+
     printf("\nTesting BIP32 Test Vector 1:\n");
     printf("Seed: ");
     for(int i = 0; i < 16; i++) printf("%02x", SEED_HEX[i]);

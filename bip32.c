@@ -5,6 +5,8 @@
 #include <string.h>
 #include <assert.h>
 #include <arpa/inet.h>
+#include <limits.h>
+#include <errno.h>
 
 #include <secp256k1.h>
 #include <sodium.h>
@@ -220,11 +222,27 @@ exit:
     return retcode;
 }
 
+
+// Returns true if invalid path characters are detected in a path string.
+static bool has_invalid_path_characters(const char* str) {
+    const char* valid = "m/0123456789hH'pP";
+    while (*str) {
+        if (!strchr(valid, *str)) {
+            return true;
+        }
+        str++;
+    }
+    return false;
+}
+
 int bip32_derive(bip32_key *target, const char* source, const char* path) {
     if (!target || !source || !path || strncmp(path, "m", 1) != 0) {
         return 0;
     }
     if (strlen(source) < 1) {
+        return 0;
+    }
+    if (has_invalid_path_characters(path)) {
         return 0;
     }
     bip32_key basekey;
@@ -260,20 +278,21 @@ int bip32_derive(bip32_key *target, const char* source, const char* path) {
     
     while (p && *p) {
         char *end;
-        uint32_t index = strtoul(p + 1, &end, 10);
+        uint32_t path_index = strtoul(p + 1, &end, 10);
         
-        if (end == p + 1) {
+        if (errno == ERANGE || path_index > INT_MAX || end == p + 1) {
+            // Overflow detected.
             return 0;
         }
         
         if (*end == '\'' || *end == 'h' || *end == 'H' || *end == 'p' || *end == 'P') {
-            index |= 0x80000000;
+            path_index |= 0x80000000;
             end++;
         }
 
         bip32_key tmp;
         memcpy(&tmp, &basekey, sizeof(bip32_key));
-        if (bip32_index_derive(&basekey, &tmp, index) != 1) {
+        if (bip32_index_derive(&basekey, &tmp, path_index) != 1) {
             return 0;
         }
         p = strchr(end, '/');

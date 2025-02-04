@@ -4,7 +4,7 @@
 
 A fast, secure, low-dependency implementation of BIP32
 
-- Depends only on [`libsecp256k1`](https://github.com/bitcoin-core/libsecp256k1) and
+- Depends only on [`libsecp256k1`](https://github.com/bitcoin-core/secp256k1) and
   [`libsodium`](https://github.com/jedisct1/libsodium) (for SHA256, HMAC-SHA512, and
   context randomization)
 - No heap allocations (aside from secp context), which allows end users to manage memory securely

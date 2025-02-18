@@ -11,7 +11,8 @@ A fast, secure, low-dependency implementation of BIP32
 - Implemented in pure C for ease of FFI
 - Extensively tested
   - Uses [cross-implementation fuzz testing](./examples/py/test_fuzz_cross_impl.py) 
-    against `python-bip32` and `verystable`.
+    against [`python-bip32`](https://github.com/darosior/python-bip32) and 
+    [`verystable`](https://github.com/jamesob/verystable/blob/master/verystable/bip32.py).
 
 
 ## Installation from source

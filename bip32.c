@@ -20,7 +20,7 @@ static void get_secp_ctx(secp256k1_context** ctx) {
 
     *ctx = secp256k1_context_create(
         SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
-    unsigned char rand[33];
+    unsigned char rand[32];
     randombytes_buf(rand, 32);
     assert(secp256k1_context_randomize(*ctx, rand));
 }
@@ -257,10 +257,10 @@ int bip32_derive(bip32_key *target, const char* source, const char* path) {
         }
     }
     else if (strspn(source, "0123456789abcdefABCDEF") == source_len) {
-        // TODO error if seed is more than 256
-        unsigned char seedbytes[256];
+        // Note: BIP32 supports a maximum of 512 bytes of seed.
+        unsigned char seedbytes[512];
         size_t bin_len;
-        if (sodium_hex2bin(seedbytes, 256, source, strlen(source), ": ", &bin_len, NULL) != 0) {
+        if (sodium_hex2bin(seedbytes, 512, source, strlen(source), ": ", &bin_len, NULL) != 0) {
             return 0;
         }
         if (!bip32_from_seed(&basekey, seedbytes, bin_len)) {
@@ -286,7 +286,7 @@ int bip32_derive(bip32_key *target, const char* source, const char* path) {
         }
         
         if (*end == '\'' || *end == 'h' || *end == 'H' || *end == 'p' || *end == 'P') {
-            path_index |= 0x80000000;
+            path_index |= HARDENED_INDEX;
             end++;
         }
 

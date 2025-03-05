@@ -24,13 +24,18 @@ void test_vector_1(void) {
     };
 
     bip32_key k;
-    bip32_derive(&k, "000102030405060708090a0b0c0d0e0f\000", "m/1'");
+    bip32_derive_from_str(&k, "000102030405060708090a0b0c0d0e0f\000", "m/1'");
+
+    bip32_key k2;
+    bip32_derive_from_seed(&k2, SEED_HEX, sizeof(SEED_HEX), "m/1'");
+
+    assert(memcmp(&k.key, &k2.key, BIP32_PRIVKEY_SIZE) == 0);
 
     // Should fail given the invalid "-1" path component.
-    assert(!bip32_derive(&k, "000102030405060708090a0b0c0d0e0f\000", "m/-1"));
+    assert(!bip32_derive_from_str(&k, "000102030405060708090a0b0c0d0e0f\000", "m/-1"));
 
     // Should fail given the too-big path component.
-    assert(!bip32_derive(&k, "000102030405060708090a0b0c0d0e0f\000", "m/2147483648"));
+    assert(!bip32_derive_from_str(&k, "000102030405060708090a0b0c0d0e0f\000", "m/2147483648"));
 
     printf("\nTesting BIP32 Test Vector 1:\n");
     printf("Seed: ");
@@ -103,12 +108,12 @@ void test_vector_1(void) {
 int main() {
     bip32_key k;
 
-    if (bip32_derive(&k, "xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ", "m/1/2") != 1) {
+    if (bip32_derive_from_str(&k, "xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ", "m/1/2") != 1) {
         printf("failed to derive xpub\n");
         return 1;
     }
     // Shouldn't work given an attempted hardened derivation with xpub.
-    if (bip32_derive(&k, "xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ", "m/1h") != 0) {
+    if (bip32_derive_from_str(&k, "xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ", "m/1h") != 0) {
         printf("failed to refuse to derive hardened path from xpub\n");
         return 1;
     }

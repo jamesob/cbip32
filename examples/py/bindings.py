@@ -3,7 +3,7 @@ import os
 from functools import lru_cache
 from pathlib import Path
 from ctypes import (
-    c_uint8, c_uint32, c_size_t, c_char_p, c_void_p,
+    c_uint8, c_uint32, c_size_t, c_char_p, c_ubyte, c_void_p,
     Structure, Union, POINTER, create_string_buffer
 )
 
@@ -20,10 +20,13 @@ def get_bip32_module():
     bip32_lib.bip32_init.argtypes = [POINTER(BIP32Key)]
     bip32_lib.bip32_init.restype = None
 
-    bip32_lib.bip32_derive.argtypes = [POINTER(BIP32Key), c_char_p, c_char_p]
-    bip32_lib.bip32_derive.restype = ctypes.c_int
+    bip32_lib.bip32_derive_from_seed.argtypes = [POINTER(BIP32Key), POINTER(c_ubyte), c_size_t, c_char_p]
+    bip32_lib.bip32_derive_from_seed.restype = ctypes.c_int
 
-    bip32_lib.bip32_derive.argtypes = [POINTER(BIP32Key), c_char_p, c_char_p]
+    bip32_lib.bip32_derive_from_str.argtypes = [POINTER(BIP32Key), c_char_p, c_char_p]
+    bip32_lib.bip32_derive_from_str.restype = ctypes.c_int
+
+    bip32_lib.bip32_derive.argtypes = [POINTER(BIP32Key), c_char_p]
     bip32_lib.bip32_derive.restype = ctypes.c_int
 
     bip32_lib.bip32_serialize.argtypes = [POINTER(BIP32Key), c_char_p, c_size_t]
@@ -103,6 +106,15 @@ def derive(source: str, path: str = 'm') -> BIP32:
 
     """
     b = BIP32()
-    if not get_bip32_module().bip32_derive(b.key, source.encode(), path.encode()):
+    if not get_bip32_module().bip32_derive_from_str(b.key, source.encode(), path.encode()):
+        raise ValueError("failed")
+    return b
+
+
+def derive_from_seed(seed: bytes, path: str = 'm') -> BIP32:
+    b = BIP32()
+    c_seed = ctypes.c_char_p(seed)
+    seed_ptr = ctypes.cast(c_seed, POINTER(c_ubyte))
+    if not get_bip32_module().bip32_derive_from_seed(b.key, seed_ptr, len(seed), path.encode()):
         raise ValueError("failed")
     return b

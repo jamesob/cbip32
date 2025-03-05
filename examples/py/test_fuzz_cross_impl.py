@@ -8,7 +8,6 @@
 # ]
 # ///
 import sys
-import random
 import logging
 import time
 from contextlib import contextmanager
@@ -19,7 +18,7 @@ from verystable import bip32 as vs_bip32
 import pytest
 from hypothesis import given, strategies as st, target, settings
 
-from bindings import derive
+from bindings import derive, derive_from_seed
 
 log = logging.getLogger(__name__)
 logging.basicConfig()
@@ -130,13 +129,30 @@ def bip32_paths(draw):
 @given(seed_hex_str=valid_seeds, bip32_path=py_compatible_bip32_paths())
 @settings(max_examples=2_000)
 def test_versus_py(seed_hex_str, bip32_path):
-    """Compare implementations of BIP32 on a random seed and path."""
+    """
+    Compare implementations of BIP32 on a random seed and path.
+    """
     with timer('ours'):
         ours = our_derive(seed_hex_str, bip32_path)
     with timer('python-bip32'):
         pys = py_derive(seed_hex_str, bip32_path)
 
     assert ours == pys
+
+
+@given(seedhex=valid_seeds, path=py_compatible_bip32_paths())
+@settings(max_examples=2_000)
+def test_versus_ourselves(seedhex, path):
+    """
+    Ensure that our different derive functions work properly.
+    """
+    seed = bytes.fromhex(seedhex)
+    from_seed = INVALID_KEY
+    try:
+        from_seed = derive_from_seed(seed, path).serialize()
+    except Exception:
+        pass
+    assert our_derive(seedhex, path) == from_seed
 
 
 @given(seed_hex_str=valid_seeds, bip32_path=py_compatible_bip32_paths())

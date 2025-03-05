@@ -43,7 +43,7 @@ libbip32.so:
 	$(CC) $(CFLAGS) -shared -fPIC bip32.c $(LDFLAGS) -o libbip32.so
 
 fuzz_target: libbip32.so
-	$(CC) -fsanitize=fuzzer,address fuzz.c libbip32.so $(LDFLAGS) -o fuzz_target
+	$(CC) -fsanitize=fuzzer,address test/fuzz.c libbip32.so $(LDFLAGS) -o fuzz_target
 
 .PHONY: test
 test: libbip32.so

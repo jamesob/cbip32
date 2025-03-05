@@ -235,22 +235,19 @@ static bool has_invalid_path_characters(const char* str) {
     return false;
 }
 
-int bip32_derive(bip32_key *target, const char* source, const char* path) {
+int bip32_derive_from_str(bip32_key* target, const char* source, const char* path) {
     if (!target || !source || !path || strncmp(path, "m", 1) != 0) {
         return 0;
     }
     if (strlen(source) < 1) {
         return 0;
     }
-    if (has_invalid_path_characters(path)) {
-        return 0;
-    }
     bip32_key basekey;
     size_t source_len = strlen(source);
-     
-    if (strncmp(source, "xprv", 4) == 0 || 
+
+    if (strncmp(source, "xprv", 4) == 0 ||
         strncmp(source, "tprv", 4) == 0 ||
-        strncmp(source, "xpub", 4) == 0 || 
+        strncmp(source, "xpub", 4) == 0 ||
         strncmp(source, "tpub", 4) == 0) {
         if (!bip32_deserialize(&basekey, source, strlen(source))) {
             return 0;
@@ -269,36 +266,57 @@ int bip32_derive(bip32_key *target, const char* source, const char* path) {
     } else {
         return 0;
     }
-    
-    char *p = (char*)strchr(path, '/');
-    if (!p) {
+
+    if (bip32_derive(&basekey, path)) {
         memcpy(target, &basekey, sizeof(bip32_key));
         return 1;
     }
-    
+    return 0;
+}
+
+int bip32_derive_from_seed(bip32_key* target, const unsigned char* seed, size_t seed_len, const char* path) {
+    if (!bip32_from_seed(target, seed, seed_len)) {
+        return 0;
+    }
+    if (bip32_derive(target, path)) {
+        return 1;
+    }
+    return 0;
+}
+
+// Do an in-place derivation on `key`.
+int bip32_derive(bip32_key* key, const char* path) {
+    if (!path || strncmp(path, "m", 1) != 0 || has_invalid_path_characters(path)) {
+        return 0;
+    }
+
+    char *p = (char*)strchr(path, '/');
+    if (!p) {
+        return 1;
+    }
+
     while (p && *p) {
         char *end;
         uint32_t path_index = strtoul(p + 1, &end, 10);
-        
+
         if (errno == ERANGE || path_index > INT_MAX || end == p + 1) {
             // Overflow detected.
             return 0;
         }
-        
+
         if (*end == '\'' || *end == 'h' || *end == 'H' || *end == 'p' || *end == 'P') {
             path_index |= HARDENED_INDEX;
             end++;
         }
 
         bip32_key tmp;
-        memcpy(&tmp, &basekey, sizeof(bip32_key));
-        if (bip32_index_derive(&basekey, &tmp, path_index) != 1) {
+        memcpy(&tmp, key, sizeof(bip32_key));
+        if (bip32_index_derive(key, &tmp, path_index) != 1) {
             return 0;
         }
         p = strchr(end, '/');
     }
-    
-    memcpy(target, &basekey, sizeof(bip32_key));
+
     return 1;
 }
 
@@ -308,7 +326,7 @@ int bip32_derive(bip32_key *target, const char* source, const char* path) {
 int bip32_serialize(const bip32_key *key, char *str, size_t str_len) {
     unsigned char data[SER_PLUS_CHECKSUM_SIZE];
     uint32_t version;
-    
+
     // Set version bytes based on network and key type
     if (key->is_private) {
         version = key->is_testnet ? VERSION_TPRIV : VERSION_XPRIV;
@@ -316,11 +334,11 @@ int bip32_serialize(const bip32_key *key, char *str, size_t str_len) {
         version = key->is_testnet ? VERSION_TPUB : VERSION_XPUB;
     }
     version = to_big_endian(version);
-    
+
     memcpy(data, &version, sizeof(version));
-    
+
     data[4] = key->depth;
-    
+
     // Write parent fingerprint
     uint32_t parfinger = key->parent_fingerprint;
     memcpy(data + 5, &parfinger, sizeof(parfinger));
@@ -328,17 +346,17 @@ int bip32_serialize(const bip32_key *key, char *str, size_t str_len) {
     // Write child number in big-endian
     uint32_t childnum = to_big_endian(key->child_number);
     memcpy(data + 9, &childnum, sizeof(childnum));
-    
+
     // Copy chain code
     memcpy(data + 13, key->chain_code, 32);
-    
+
     if (key->is_private) {
         data[45] = 0;
         memcpy(data + 46, key->key.privkey, 32);
     } else {
         memcpy(data + 45, key->key.pubkey, 33);
     }
-    
+
     // Add checksum and base58 encode
     uint8_t hash[32];
     bip32_sha256_double(hash, data, 78);
@@ -374,7 +392,7 @@ int bip32_deserialize(bip32_key *key, const char *str, const size_t str_len) {
             key->is_private = 0;
             break;
         case VERSION_XPRIV:
-            key->is_testnet = 0; 
+            key->is_testnet = 0;
             key->is_private = 1;
             break;
         case VERSION_TPRIV:
@@ -454,10 +472,10 @@ void bip32_sha256_double(uint8_t *hash, const uint8_t *data, size_t len) {
 }
 
 void bip32_hmac_sha512(
-    unsigned char* hmac_out, 
-    const unsigned char* key, 
-    size_t key_len, 
-    const unsigned char* msg, 
+    unsigned char* hmac_out,
+    const unsigned char* key,
+    size_t key_len,
+    const unsigned char* msg,
     size_t msg_len
 ) {
     assert(sodium_init() >= 0);

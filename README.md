@@ -21,12 +21,16 @@ Install libsecp256k1
 ```bash
 git clone https://github.com/bitcoin-core/secp256k1.git && \
   cd secp256k1 && ./autogen.sh && ./configure && make && sudo make install
+
+# NOTE: in production, you should verify the associated GPG sigs and/or pin hashes.
 ```
 
 Install libsodium
 ```bash
 git clone https://github.com/jedisct1/libsodium.git && \
   cd libsodium && ./autogen.sh -sb && ./configure && make && sudo make install
+
+# NOTE: in production, you should verify the associated GPG sigs and/or pin hashes.
 ```
 
 Install this library
@@ -34,6 +38,13 @@ Install this library
 git clone https://github.com/jamesob/cbip32.git && \
   make && sudo make install
 ```
+
+## Tests
+
+- [Vectors from BIP32](./examples/py/test_bip32.py)
+- [Cross-implementation fuzz](./examples/py/test_fuzz_cross_impl.py)
+- [C unittests](./test/test.c)
+- [C fuzz](./test/fuzz.c)
 
 ## Performance
 

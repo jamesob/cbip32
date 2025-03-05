@@ -25,6 +25,6 @@ func Derive(source, path string) (*BIP32Key, bool) {
     defer C.free(unsafe.Pointer(cSource))
     defer C.free(unsafe.Pointer(cPath))
 
-    result := C.bip32_derive(&key.cKey, cSource, cPath)
+    result := C.bip32_derive_from_str(&key.cKey, cSource, cPath)
     return key, result == 1
 }

@@ -41,12 +41,24 @@ void bip32_init(bip32_key *key);
  */
 int bip32_from_seed(bip32_key *key, const unsigned char *seed, size_t seed_len);
 
+/** Derive a BIP32 path from a raw seed.
+ *
+ * Returns 1 if successful.
+ */
+int bip32_derive_from_seed(bip32_key* target, const unsigned char* seed, size_t seed_len, const char* path);
+
 /** Derive a BIP32 path. `source` as a null-terminated string that can either be a
  * 32 byte seed (secret), or a serialized BIP32 key (xprv*, xpub*, tprv*, tpub*).
  *
  * Returns 1 if successful.
  */
-int bip32_derive(bip32_key *target, const char* source, const char* path);
+int bip32_derive_from_str(bip32_key *target, const char* source, const char* path);
+
+/** Derive a BIP32 key along a path in-place. This is destructive on `target`.
+ *
+ * Returns 1 if successful.
+ */
+int bip32_derive(bip32_key *target, const char* path);
 
 /** Serialize a BIP32 key to its base58 string representation.
  *

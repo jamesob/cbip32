@@ -1,6 +1,6 @@
 import unittest
 
-from bindings import derive
+from bindings import derive, derive_from_seed
 
 
 class TestBIP32(unittest.TestCase):
@@ -15,6 +15,12 @@ class TestBIP32(unittest.TestCase):
 
                         pub = derived.get_public()
                         self.assertEqual(pub.serialize(), expected["xpub"])
+
+                        # Ensure the equivalent `derive_from_seed` call yields the
+                        # same result.
+                        from_seed = derive_from_seed(bytes.fromhex(seed), path)
+                        self.assertEqual(from_seed.serialize(), derived.serialize())
+
 
     def test_bad_vectors(self):
         for case in BAD_VECTORS:

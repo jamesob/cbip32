@@ -27,7 +27,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     
     if (path[0] != 'm') path[0] = 'm';
     
-    bip32_derive(&target, source, path);
+    bip32_derive_from_str(&target, source, path);
 
     free(source);
     free(path);

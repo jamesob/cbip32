@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
    bip32_key key;
    char serialized[112];
    
-   if (!bip32_derive(&key, argv[1], argv[2])) {
+   if (!bip32_derive_from_str(&key, argv[1], argv[2])) {
        fprintf(stderr, "Derivation failed\n");
        return 1;
    }

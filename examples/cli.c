@@ -15,7 +15,8 @@ int main(int argc, char *argv[]) {
        return 1;
    }
 
-   if (!bip32_serialize(&key, serialized, sizeof(serialized))) {
+   size_t out_size;
+   if (!bip32_serialize(&key, serialized, &out_size)) {
        fprintf(stderr, "Serialization failed\n");
        return 1;
    }

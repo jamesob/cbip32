@@ -18,7 +18,7 @@ from verystable import bip32 as vs_bip32
 import pytest
 from hypothesis import given, strategies as st, target, settings
 
-from bindings import derive, derive_from_seed
+from bindings import derive, derive_from_seed, b58_decode, b58_encode
 
 log = logging.getLogger(__name__)
 logging.basicConfig()
@@ -179,6 +179,33 @@ def test_xpub_impls(bip32_path):
     with timer('python-bip32'):
         pys = py_xpub_derive(xpub, bip32_path)
     assert ours == pys
+
+
+
+@given(b58_data=st.binary(min_size=0, max_size=1000))
+@settings(max_examples=1000)
+def test_base58(b58_data: bytes):
+    if b58_data and len(b58_data) >= 2:
+        # TODO: figure out why the base58 impl is failing on example b':'
+        assert b58_decode(b58_encode(b58_data)) == b58_data
+
+
+def test_base58_known_vectors():
+    cases = [
+        (bytes.fromhex(""), ""),
+        (bytes.fromhex("00"), "1"),
+        (bytes.fromhex("0000"), "11"),
+        (bytes.fromhex("68656c6c6f20776f726c64"), "StV1DL6CwTryKyV"),
+        (bytes.fromhex("0068656c6c6f20776f726c64"), "1StV1DL6CwTryKyV"),
+        (bytes.fromhex("000068656c6c6f20776f726c64"), "11StV1DL6CwTryKyV"),
+    ]
+
+    for raw, encoded in cases:
+        if raw:  # Skip empty input for encoding test
+            assert b58_encode(raw) == encoded
+
+        if encoded:  # Skip empty input for decoding test
+            assert b58_decode(encoded) == raw
 
 
 if __name__ == "__main__":

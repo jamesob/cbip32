@@ -1,3 +1,7 @@
+/**
+ * This API is generally designed to mimic the libsecp256k1 library, in terms of
+ * argument order and return conventions.
+ */
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -60,11 +64,14 @@ int bip32_derive_from_str(bip32_key *target, const char* source, const char* pat
  */
 int bip32_derive(bip32_key *target, const char* path);
 
-/** Serialize a BIP32 key to its base58 string representation.
+/** Serialize a BIP32 key to its base58 string representation. Writes the resulting
+ * string to `str`, and the length of the resulting string to `str_len`.
+ *
+ * `str_len` must initially be set to the maximum length of the `str` buffer.
  *
  * Returns 1 if successful.
  */
-int bip32_serialize(const bip32_key *key, char *str, size_t str_len);
+int bip32_serialize(const bip32_key *key, char *str, size_t* str_len);
 
 /** Deserialize a BIP32 key from its base58 string representation.
  *
@@ -105,6 +112,18 @@ void bip32_hmac_sha512(
     const unsigned char* msg,
     size_t msg_len
 );
+
+/** Encode some bytes to a base58 string.
+ *
+ * Returns true if successful.
+ */
+bool bip32_b58_encode(char* str_out, size_t* out_size, const unsigned char* data, size_t data_size);
+
+/** Decode some bytes from a base58 string.
+ *
+ * Returns true if successful.
+ */
+bool bip32_b58_decode(unsigned char* bin_out, size_t* out_size, const char* str_in, size_t str_size);
 
 #ifdef __cplusplus
 }

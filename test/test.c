@@ -50,8 +50,10 @@ void test_vector_1(void) {
         return;
     }
 
+    size_t out_size = 200;
+
     // Test private key
-    bip32_serialize(&master, str, sizeof(str));
+    bip32_serialize(&master, str, &out_size);
     printf("  Private:  %s\n", str);
     printf("  Expected: xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi\n");
     if (strcmp(str, "xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi") != 0) {
@@ -62,7 +64,7 @@ void test_vector_1(void) {
     // Test public key
     bip32_key pub;
     bip32_get_public(&pub, &master);
-    bip32_serialize(&pub, str, sizeof(str));
+    bip32_serialize(&pub, str, &out_size);
     printf("  Public:   %s\n", str);
     printf("  Expected: xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8\n");
     if (strcmp(str, "xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8") != 0) {
@@ -77,12 +79,12 @@ void test_vector_1(void) {
         return;
     }
     
-    bip32_serialize(&child, str, sizeof(str));
+    bip32_serialize(&child, str, &out_size);
     printf("  Private:  %s\n", str);
     printf("  Expected: xprv9uHRZZhk6KAJC1avXpDAp4MDc3sQKNxDiPvvkX8Br5ngLNv1TxvUxt4cV1rGL5hj6KCesnDYUhd7oWgT11eZG7XnxHrnYeSvkzY7d2bhkJ7\n");
 
     bip32_get_public(&pub, &child);
-    bip32_serialize(&pub, str, sizeof(str));
+    bip32_serialize(&pub, str, &out_size);
     printf("  Public:   %s\n", str);
     printf("  Expected: xpub68Gmy5EdvgibQVfPdqkBBCHxA5htiqg55crXYuXoQRKfDBFA1WEjWgP6LHhwBZeNK1VTsfTFUHCdrfp1bgwQ9xv5ski8PX9rL2dZXvgGDnw\n");
 
@@ -93,12 +95,12 @@ void test_vector_1(void) {
         return;
     }
 
-    bip32_serialize(&master, str, sizeof(str));
+    bip32_serialize(&master, str, &out_size);
     printf("  Private:  %s\n", str);
     printf("  Expected: xprv9wTYmMFdV23N2TdNG573QoEsfRrWKQgWeibmLntzniatZvR9BmLnvSxqu53Kw1UmYPxLgboyZQaXwTCg8MSY3H2EU4pWcQDnRnrVA1xe8fs\n");
 
     bip32_get_public(&pub, &master);
-    bip32_serialize(&pub, str, sizeof(str));
+    bip32_serialize(&pub, str, &out_size);
     printf("  Public:   %s\n", str);
     printf("  Expected: xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ\n");
 

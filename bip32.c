@@ -66,6 +66,7 @@ int bip32_from_seed(bip32_key *key, const unsigned char *seed, size_t seed_len) 
     memcpy(key->chain_code, output + BIP32_PRIVKEY_SIZE, BIP32_CHAINCODE_SIZE);
 
 exit:
+    sodium_memzero(output, crypto_auth_hmacsha512_BYTES);
     secp256k1_context_destroy(ctx);
     return retcode;
 }
@@ -164,6 +165,9 @@ int bip32_index_derive(bip32_key *target, const bip32_key *source, uint32_t inde
 
     bip32_hmac_sha512(output, source->chain_code, BIP32_CHAINCODE_SIZE, hmac_msg, hmac_msg_len);
 
+    // hmac_msg potentially contains privkey bytes.
+    sodium_memzero(hmac_msg, hmac_msg_len);
+
     memcpy(target->chain_code, output + BIP32_PRIVKEY_SIZE, BIP32_CHAINCODE_SIZE);
 
     if (source->is_private) {
@@ -222,19 +226,6 @@ exit:
     return retcode;
 }
 
-
-// Returns true if invalid path characters are detected in a path string.
-static bool has_invalid_path_characters(const char* str) {
-    const char* valid = "m/0123456789hH'pP";
-    while (*str) {
-        if (!strchr(valid, *str)) {
-            return true;
-        }
-        str++;
-    }
-    return false;
-}
-
 int bip32_derive_from_str(bip32_key* target, const char* source, const char* path) {
     if (!target || !source || !path || strncmp(path, "m", 1) != 0) {
         return 0;
@@ -250,6 +241,7 @@ int bip32_derive_from_str(bip32_key* target, const char* source, const char* pat
         strncmp(source, "xpub", 4) == 0 ||
         strncmp(source, "tpub", 4) == 0) {
         if (!bip32_deserialize(&basekey, source, strlen(source))) {
+            sodium_memzero(&basekey, sizeof(bip32_key));
             return 0;
         }
     }
@@ -261,6 +253,7 @@ int bip32_derive_from_str(bip32_key* target, const char* source, const char* pat
             return 0;
         }
         if (!bip32_from_seed(&basekey, seedbytes, bin_len)) {
+            sodium_memzero(&basekey, sizeof(bip32_key));
             return 0;
         }
     } else {
@@ -269,6 +262,7 @@ int bip32_derive_from_str(bip32_key* target, const char* source, const char* pat
 
     if (bip32_derive(&basekey, path)) {
         memcpy(target, &basekey, sizeof(bip32_key));
+        sodium_memzero(&basekey, sizeof(bip32_key));
         return 1;
     }
     return 0;
@@ -282,6 +276,18 @@ int bip32_derive_from_seed(bip32_key* target, const unsigned char* seed, size_t 
         return 1;
     }
     return 0;
+}
+
+// Returns true if invalid path characters are detected in a path string.
+static bool has_invalid_path_characters(const char* str) {
+    const char* valid = "m/0123456789hH'pP";
+    while (*str) {
+        if (!strchr(valid, *str)) {
+            return true;
+        }
+        str++;
+    }
+    return false;
 }
 
 // Do an in-place derivation on `key`.
@@ -314,6 +320,7 @@ int bip32_derive(bip32_key* key, const char* path) {
         if (bip32_index_derive(key, &tmp, path_index) != 1) {
             return 0;
         }
+        sodium_memzero(&tmp, sizeof(bip32_key));
         p = strchr(end, '/');
     }
 
@@ -323,7 +330,7 @@ int bip32_derive(bip32_key* key, const char* path) {
 #define SER_SIZE 78
 #define SER_PLUS_CHECKSUM_SIZE (SER_SIZE + 4)
 
-int bip32_serialize(const bip32_key *key, char *str, size_t str_len) {
+int bip32_serialize(const bip32_key *key, char *str, size_t* str_len) {
     unsigned char data[SER_PLUS_CHECKSUM_SIZE];
     uint32_t version;
 
@@ -362,7 +369,10 @@ int bip32_serialize(const bip32_key *key, char *str, size_t str_len) {
     bip32_sha256_double(hash, data, 78);
     memcpy(data + SER_SIZE, hash, 4);
 
-    return b58enc(str, &str_len, data, SER_PLUS_CHECKSUM_SIZE);
+    bool b58_ok = bip32_b58_encode(str, str_len, data, SER_PLUS_CHECKSUM_SIZE);
+    sodium_memzero(data, SER_PLUS_CHECKSUM_SIZE);
+
+    return b58_ok ? 1 : 0;
 }
 
 #define BIP32_BASE58_BYTES_LEN 82
@@ -371,7 +381,8 @@ int bip32_deserialize(bip32_key *key, const char *str, const size_t str_len) {
     unsigned char data[BIP32_BASE58_BYTES_LEN];
     size_t data_len = BIP32_BASE58_BYTES_LEN;
 
-    if (!b58tobin(data, &data_len, str, str_len) || data_len != BIP32_BASE58_BYTES_LEN) {
+    if (!bip32_b58_decode(data, &data_len, str, str_len) || data_len != BIP32_BASE58_BYTES_LEN) {
+        sodium_memzero(data, BIP32_BASE58_BYTES_LEN);
         return 0;
     }
 
@@ -426,16 +437,22 @@ int bip32_deserialize(bip32_key *key, const char *str, const size_t str_len) {
 
     if (key->is_private) {
         if (data[45] != 0) {
+            sodium_memzero(data, BIP32_BASE58_BYTES_LEN);
             secp256k1_context_destroy(ctx);
             return 0;
         }
+
         memcpy(key->key.privkey, data + 46, BIP32_PRIVKEY_SIZE);
+        sodium_memzero(data, BIP32_BASE58_BYTES_LEN);
+
         if (!secp256k1_ec_seckey_verify(ctx, key->key.privkey)) {
             secp256k1_context_destroy(ctx);
             return 0;
         }
     } else {
         memcpy(key->key.pubkey, data + 45, BIP32_PUBKEY_SIZE);
+        sodium_memzero(data, BIP32_BASE58_BYTES_LEN);
+
         secp256k1_pubkey pubkey;
         if (!secp256k1_ec_pubkey_parse(ctx, &pubkey, key->key.pubkey, BIP32_PUBKEY_SIZE)) {
             secp256k1_context_destroy(ctx);
@@ -483,4 +500,12 @@ void bip32_hmac_sha512(
     crypto_auth_hmacsha512_init(&state, key, key_len);
     crypto_auth_hmacsha512_update(&state, msg, msg_len);
     crypto_auth_hmacsha512_final(&state, hmac_out);
+}
+
+bool bip32_b58_encode(char* str_out, size_t* out_size, const unsigned char* data, size_t data_size) {
+    return b58enc(str_out, out_size, data, data_size);
+}
+
+bool bip32_b58_decode(unsigned char* bin_out, size_t* out_size, const char* str_in, size_t str_size) {
+    return b58tobin(bin_out, out_size, str_in, str_size);
 }
